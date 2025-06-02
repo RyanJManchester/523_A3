@@ -39,7 +39,7 @@ class NaivePerStopRegressor:
             window.pop(0)
         window.append(value)
 
-    def train(self, stop_id, target):
+    def train(self, stop_id, target, feature):
         """
         Trains regressor on an instance
 
@@ -48,7 +48,7 @@ class NaivePerStopRegressor:
             target (float): Target value to predict
         """
         # Update window
-        self.update_window(stop_id, target)
+        self.update_window(stop_id, feature)
 
         window = self.windows[stop_id]
         # If there aren't enough instances to implement lag features can't train
