@@ -23,11 +23,11 @@ df_5min['period_start'] = df_5min['timestamp'].apply(get_custom_period)
 
 groups = [g for _, g in df_5min.groupby('period_start')]
 
-for group in groups:
+col_list = list(df_5min.columns)
+col_list.remove('timestamp')
+col_list.remove('period_start')
 
-    col_list = list(group.columns)
-    col_list.remove('timestamp')
-    col_list.remove('period_start')
+for group in groups:
     
     for col in col_list:
         # Copy non-null values from 'col1' to 'col3'
@@ -44,5 +44,15 @@ df_5min = pd.concat(groups).sort_values('timestamp')
 df_5min = df_5min.round(3).reindex(sorted(df_5min.columns), axis=1)
 
 df_5min.set_index('timestamp', inplace=True)
+
+dfs = []
+
+for col in col_list:
+    list = col_list + [col+'_f30avg']
+    df = df_5min[list].rename(columns={col+'_f30avg':"f30avg"})
+    df['stop'] = col
+    dfs.append(df)
+
+df_5min = pd.concat(dfs).sort_values(['timestamp','stop'])
 
 df_5min.to_csv("output.csv")
