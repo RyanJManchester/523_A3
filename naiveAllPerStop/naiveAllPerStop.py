@@ -10,7 +10,7 @@ class NaiveAllPerStopRegressor:
 
         Args:
             stop_ids (str[]): List of stop ids from file
-            num_features (int): Number of lag features for model to predict on
+            window_size (int): Number of lag features for model to predict on
         '''
 
         # Set window sizes and create
@@ -31,10 +31,9 @@ class NaiveAllPerStopRegressor:
 
     def update_window(self, value):
         """
-        Updates regressor winodws with an instance
+        Updates regressor windows with an instance
 
         Args:
-            stop_id (str): String of stop_id
             value (int): value of instance
         """
         # Sliding window
@@ -50,11 +49,12 @@ class NaiveAllPerStopRegressor:
 
     def train(self, stop_id, target, features):
         """
-        Trains regressor on an instance
+        Trains regressor for stop_id on an instance
 
         Args:
             stop_id (str): String of stop_id data comes from
             target (float): Target value to predict
+            features (array): Data to use to predict the value
         """
 
         # Update window
@@ -67,14 +67,14 @@ class NaiveAllPerStopRegressor:
         # Build lag features and train regressor
         x = np.array(self.get_window())
         instance = RegressionInstance.from_array(self.schema, x, target)
-        self.regressors[stop_id].train(instance)
+        self.regressors[str(int(stop_id))].train(instance)
 
     def predict(self, stop_id):
         """
         Predicts value
 
         Args:
-            stop_id (str): String of stop_id to predict from
+            stop_id (str): String of stop_id to predict
         """
 
         # Can't predict without lag features
@@ -84,4 +84,4 @@ class NaiveAllPerStopRegressor:
         # Build lag features, predict
         x = np.array(self.get_window())
         instance = RegressionInstance.from_array(self.schema, x, 0.0) # Needs target
-        return self.regressors[stop_id].predict(instance)
+        return self.regressors[str(int(stop_id))].predict(instance)
