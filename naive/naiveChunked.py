@@ -3,7 +3,7 @@ from capymoa.stream import Schema
 from capymoa.instance import RegressionInstance
 import numpy as np
 
-class NaiveRegressor:
+class NaiveRegressorChunked:
     def __init__(self, stop_ids, num_features=5):
         '''
         Inits regressor for naive approach
@@ -25,19 +25,19 @@ class NaiveRegressor:
         # Using FIMTDD as regressor
         self.regressor = FIMTDD(self.schema)
 
-    def update_window(self, stop_id, value):
+    def update_all_windows(self, row):
         """
-        Updates regressor winodws with an instance
+        Updates all per-stop lag windows using current occupancy data
 
         Args:
-            stop_id (str): String of stop_id
-            value (int): value of instance
+            row (pd.Series): A row from dataframe of occupancies per stop
         """
-        window = self.windows[stop_id]
-        # Sliding window
-        if len(window) == self.window_size:
-            window.pop(0)
-        window.append(value)
+        for stop_id in self.windows.keys():
+            value = row[str(stop_id)]
+            window = self.windows[stop_id]
+            if len(window) == self.window_size:
+                window.pop(0)
+            window.append(value)
 
     def train(self, stop_id, target):
         """
@@ -50,14 +50,12 @@ class NaiveRegressor:
         window = self.windows[stop_id]
         # If there aren't enough instances to implement lag features can't train
         if len(window) < self.num_features:
-            self.update_window(stop_id, target)
             return
         
         # Build lag features and train regressor
         x = np.array(window)
         instance = RegressionInstance.from_array(self.schema, x, target)
         self.regressor.train(instance)
-        self.update_window(stop_id, target)
 
     def predict(self, stop_id):
         """
